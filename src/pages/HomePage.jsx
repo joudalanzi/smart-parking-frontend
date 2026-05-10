@@ -75,8 +75,6 @@ export default function HomePage() {
             <h1 className="title">احجز موقفك قبل الوصول</h1>
             <p className="subtitle">
               <strong>صفَّة</strong> يساعدك تختار منطقة المواقف من الخريطة، ثم تحجز وتستلم تذكرتك.
-              <br />
-              التجربة هنا ويب بروفيشنل — والباك إند هو نفس الـ API.
             </p>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>

@@ -74,7 +74,7 @@ export default function Layout() {
       <header className="topbar">
         <div className="container topbarInner">
           <Link to="/" className="brand" aria-label="صفَّة">
-            <img src="/logo.png" alt="صفَّة" className="brandLogo" />
+            <img src="/favicon.svg" alt="صفَّة" className="brandLogo" width={48} height={46} decoding="async" />
           </Link>
 
           <nav className="nav">

@@ -17,7 +17,7 @@ export default function AdminLayout() {
       <aside className="adminAside">
         <div className="adminAsideInner">
           <div className="adminBrand">
-            <img src="/logo.png" alt="صفَّة" className="adminBrandLogo" />
+            <img src="/favicon.svg" alt="صفَّة" className="adminBrandLogo" width={48} height={46} decoding="async" />
             <span>لوحة الإدارة</span>
           </div>
           <nav className="adminNav">
