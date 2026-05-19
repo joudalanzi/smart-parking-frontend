@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
         <StatCard label="إجمالي الحجوزات" value={data?.reservationsTotal ?? '—'} to="/admin/reservations" />
         <StatCard label="طلبات همم قيد المراجعة" value={data?.pendingDisabilityRequests ?? '—'} to="/admin/disability" highlight />
         <StatCard label="بلاغات واعتراضات" value={data?.reportsTotal ?? '—'} to="/admin/reports" />
-        <StatCard label="مناطق الخريطة" value={data?.mapZonesCount ?? '—'} to="/admin/map" />
+        <StatCard label="مناطق الخريطة" value={data?.mapZonesCount ?? '—'} to="/admin/zones" />
         <StatCard label="مخالفات مسجّلة" value={data?.violationsOpen ?? '—'} to="/admin/violations" />
       </div>
 

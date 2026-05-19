@@ -68,7 +68,8 @@ textarea {
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 50;
+  /* فوق طبقات Leaflet (حتى ~1000) حتى لا تغطي الخريطة شريط التنقل */
+  z-index: 1100;
   backdrop-filter: blur(10px);
   background: rgba(5, 11, 19, 0.62);
   border-bottom: 1px solid var(--border);
@@ -91,16 +92,26 @@ textarea {
 }
 
 .brandMark {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
-  object-fit: contain;
-  background: var(--bg);
-  display: block;
-  flex-shrink: 0;
+  background:
+    radial-gradient(120% 120% at 25% 20%, rgba(255, 255, 255, 0.55), transparent 48%),
+    linear-gradient(135deg, rgba(71, 230, 255, 0.95), rgba(26, 167, 255, 0.95));
   box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 18px 34px rgba(71, 230, 255, 0.14),
+    0 18px 34px rgba(26, 167, 255, 0.08);
+}
+
+.brandLogo {
+  display: block;
+  height: 46px;
+  width: auto;
+  max-width: min(168px, 38vw);
+  object-fit: contain;
+  object-position: center;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 10px rgba(71, 230, 255, 0.35));
 }
 
 .brandName {
@@ -135,6 +146,27 @@ textarea {
   color: var(--text);
   background: rgba(34, 211, 238, 0.12);
   border-color: rgba(34, 211, 238, 0.18);
+}
+
+.navBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(239, 68, 68, 0.92);
+  color: #fff;
+  margin-inline-start: 6px;
+  line-height: 1;
+}
+
+.navBadgeInline {
+  margin-inline-start: 8px;
+  vertical-align: middle;
 }
 
 .chip {
@@ -187,7 +219,7 @@ textarea {
   background: linear-gradient(160deg, rgba(18, 28, 42, 0.98), rgba(8, 14, 24, 0.98));
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: var(--shadow);
-  z-index: 80;
+  z-index: 1200;
 }
 
 .userDropdownLink {
@@ -416,7 +448,7 @@ textarea {
 .modalBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -450,16 +482,30 @@ textarea {
 
 .adminBrand {
   font-weight: 900;
-  font-size: 16px;
+  font-size: 14px;
   margin-bottom: 18px;
-  color: var(--text);
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.adminBrandLogo {
+  height: 38px;
+  max-width: min(140px, 34vw);
 }
 
 .adminNav {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex-shrink: 0;
+}
+
+.adminAsideStretch {
   flex: 1;
+  min-height: 16px;
 }
 
 .adminNavLink {
@@ -483,8 +529,8 @@ textarea {
 }
 
 .adminAsideFooter {
-  margin-top: auto;
-  padding-top: 16px;
+  flex-shrink: 0;
+  padding-top: 8px;
 }
 
 .adminMain {
@@ -644,6 +690,50 @@ textarea.input {
   box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.12);
 }
 
+/* قوائم <select> الأصلية: المتصفح يعرض القائمة بخلفية فاتحة بينما color للصفحة فاتح → نص غير مرئي */
+select.input {
+  cursor: pointer;
+}
+
+select.input option,
+select.input optgroup {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+.passwordField {
+  position: relative;
+  display: block;
+}
+
+.passwordField .input {
+  padding-inline-end: 48px;
+}
+
+.passwordToggle {
+  position: absolute;
+  inset-inline-end: 6px;
+  top: 50%;
+  translate: 0 -50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.passwordToggle:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .grid2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -683,6 +773,9 @@ textarea.input {
 }
 
 .mapWrap {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
   height: 460px;
   overflow: hidden;
   border-radius: var(--radius);
@@ -768,6 +861,27 @@ textarea.input {
   border-color: rgba(34, 211, 238, 0.22);
 }
 
+.resSpotSectionSpots {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.resSpotColumnBlock {
+  margin-bottom: 18px;
+}
+
+.resSpotColumnBlock:last-child {
+  margin-bottom: 0;
+}
+
+.resSpotColumnTitle {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
 .spotsGrid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -810,9 +924,12 @@ textarea.input {
   color: var(--text);
   cursor: pointer;
   font-weight: 900;
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.45;
   text-align: center;
   transition: 150ms ease;
+  hyphens: auto;
+  overflow-wrap: anywhere;
 }
 
 .spotBtn:hover {
@@ -843,4 +960,42 @@ textarea.input {
 .kpiValue {
   font-size: 14px;
   font-weight: 900;
+}
+
+/* Admin zone picker */
+.adminMapPicker {
+  position: relative;
+}
+
+.adminMapPicker--interactive {
+  cursor: crosshair;
+}
+
+.adminMapPicker--preview .leaflet-container {
+  cursor: grab;
+}
+
+.adminMapPickerHint {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  background: rgba(5, 11, 19, 0.82);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  max-width: calc(100% - 24px);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.adminMapThumbWrap {
+  max-width: min(440px, 100%);
+  margin-inline: auto;
 }

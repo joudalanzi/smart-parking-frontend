@@ -8,17 +8,16 @@ import PaymentPage from './pages/PaymentPage.jsx';
 import ActiveBookingPage from './pages/ActiveBookingPage.jsx';
 import MyBookingsPage from './pages/MyBookingsPage.jsx';
 import MyReportsPage from './pages/MyReportsPage.jsx';
-import DashboardPage from './pages/DashboardPage.jsx';
+import NotificationsPage from './pages/NotificationsPage.jsx';
 import AdminProtected from './components/AdminProtected.jsx';
 import AdminLayout from './components/AdminLayout.jsx';
-import AdminLoginPage from './pages/AdminLoginPage.jsx';
 import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
 import AdminZonesPage from './pages/AdminZonesPage.jsx';
-import AdminMapZonesPage from './pages/AdminMapZonesPage.jsx';
 import AdminDisabilityPage from './pages/AdminDisabilityPage.jsx';
 import AdminReservationsPage from './pages/AdminReservationsPage.jsx';
 import AdminReportsPage from './pages/AdminReportsPage.jsx';
 import AdminViolationsPage from './pages/AdminViolationsPage.jsx';
+import AdminLoginPage from './pages/AdminLoginPage.jsx';
 
 export default function App() {
   return (
@@ -35,7 +34,7 @@ export default function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboardPage />} />
         <Route path="zones" element={<AdminZonesPage />} />
-        <Route path="map" element={<AdminMapZonesPage />} />
+        <Route path="map" element={<Navigate to="/admin/zones" replace />} />
         <Route path="disability" element={<AdminDisabilityPage />} />
         <Route path="reservations" element={<AdminReservationsPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
@@ -85,13 +84,14 @@ export default function App() {
           }
         />
         <Route
-          path="dashboard"
+          path="notifications"
           element={
             <Protected>
-              <DashboardPage />
+              <NotificationsPage />
             </Protected>
           }
         />
+        <Route path="dashboard" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

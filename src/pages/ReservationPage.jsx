@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,8 @@ import {
   durationToMinutes,
   ensureColumnsHaveSpotsCount,
   estimateAmountRiyals,
+  formatSpotGridCaption,
+  partitionSpotsByFloors,
   validateCarInfo,
 } from '../lib/parkingHelpers';
 
@@ -84,13 +86,19 @@ export default function ReservationPage() {
     zones: DEFAULT_ZONES,
     zoneFloors: DEFAULT_ZONE_FLOORS,
     columns: DEFAULT_COLUMNS,
+    zoneColumns: {},
   });
 
   const zones = zonesConfig.zones;
   const zoneFloorsMap = zonesConfig.zoneFloors;
-  const columnsList = zonesConfig.columns;
 
-  const [zone, setZone] = useState(preselected && DEFAULT_ZONES.includes(preselected) ? preselected : DEFAULT_ZONES[0]);
+  const [zone, setZone] = useState(() => (preselected ? preselected : DEFAULT_ZONES[0]));
+
+  const columnsList = useMemo(() => {
+    const perZone = zonesConfig.zoneColumns?.[zone];
+    const cols = perZone?.length ? perZone : zonesConfig.columns;
+    return ensureColumnsHaveSpotsCount(cols);
+  }, [zonesConfig.zoneColumns, zonesConfig.columns, zone]);
   const zoneFloors = zoneFloorsMap[zone] || [];
   const firstAvailableFloor = zoneFloors.find((f) => f.available);
   const [floor, setFloor] = useState(firstAvailableFloor ? firstAvailableFloor.name : zoneFloors[0]?.name || 'الدور الأول');
@@ -103,26 +111,37 @@ export default function ReservationPage() {
   const [carColor, setCarColor] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await apiFetch('/api/zones/config');
-        if (data?.zones?.length && data.zoneFloors && data.columns?.length) {
-          const cols = ensureColumnsHaveSpotsCount(data.columns);
-          setZonesConfig({
-            zones: data.zones,
-            zoneFloors: data.zoneFloors,
-            columns: cols,
-          });
-          if (preselected && data.zones.includes(preselected)) {
-            setZone(preselected);
-          }
+  const fetchZonesConfig = useCallback(async () => {
+    try {
+      const data = await apiFetch('/api/zones/config');
+      if (data?.zones?.length && data.zoneFloors && data.columns?.length) {
+        const cols = ensureColumnsHaveSpotsCount(data.columns);
+        setZonesConfig({
+          zones: data.zones,
+          zoneFloors: data.zoneFloors,
+          columns: cols,
+          zoneColumns: data.zoneColumns || {},
+        });
+        if (preselected && data.zones.includes(preselected)) {
+          setZone(preselected);
         }
-      } catch {
-        /* defaults */
       }
-    })();
+    } catch {
+      /* defaults */
+    }
   }, [preselected]);
+
+  useEffect(() => {
+    fetchZonesConfig();
+  }, [fetchZonesConfig]);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === 'visible') fetchZonesConfig();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [fetchZonesConfig]);
 
   useEffect(() => {
     if (!zones.includes(zone)) {
@@ -134,10 +153,21 @@ export default function ReservationPage() {
     setFloor(nextAvail ? nextAvail.name : nextFloors[0]?.name || 'الدور الأول');
   }, [zone, zones, zoneFloorsMap]);
 
+  useEffect(() => {
+    setColumn('');
+  }, [floor]);
+
   const allSpots = useMemo(
     () => buildSpotsFromColumns(columnsList, accessibleApproved),
     [columnsList, accessibleApproved]
   );
+
+  const spotsByFloor = useMemo(
+    () => partitionSpotsByFloors(allSpots, zoneFloors),
+    [allSpots, zoneFloors]
+  );
+
+  const spotsForFloor = spotsByFloor.get(floor) ?? [];
 
   const goPayment = () => {
     setError('');
@@ -206,9 +236,22 @@ export default function ReservationPage() {
                 </select>
               </div>
 
-              <div style={{ marginTop: 14 }}>
-                <div className="label">الدور</div>
-                <div className="pillRow" style={{ marginTop: 8 }}>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="cardBody">
+              <h2 className="sectionTitle">اختر الموقف</h2>
+              <p className="muted" style={{ marginTop: 0 }}>
+                اختر الدور أولًا، ثم الموقف ضمن العمود في هذا الدور. المواقع تُقسَّم بين الأدوار المتاحة بالتساوي.
+                {accessibleApproved ? ' مواقف ذوي الهمم تظهر لك إذا كانت ضمن المسموح.' : ' مواقف ذوي الهمم لا تظهر إلا للمستخدم المعتمد.'}
+              </p>
+
+              <div className="resSpotSection">
+                <div className="label" style={{ marginBottom: 8 }}>
+                  ١ — الدور
+                </div>
+                <div className="pillRow">
                   {zoneFloors.map((f) => (
                     <button
                       key={f.id}
@@ -223,31 +266,43 @@ export default function ReservationPage() {
                   ))}
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="card">
-            <div className="cardBody">
-              <h2 className="sectionTitle">اختر الموقف</h2>
-              <p className="muted" style={{ marginTop: 0 }}>
-                اختر رقم الموقف. {accessibleApproved ? 'مواقف ذوي الهمم تظهر لك إذا كانت ضمن المسموح.' : 'مواقف ذوي الهمم لا تظهر إلا للمستخدم المعتمد.'}
-              </p>
-              <div className="spotsGrid" role="list">
-                {allSpots.map((spot) => (
-                  <button
-                    key={spot.id}
-                    type="button"
-                    onClick={() => {
-                      setColumn(spot.label);
-                      setAccessibleParking(spot.isAccessibleOnly);
-                    }}
-                    className={`spotBtn ${column === spot.label ? 'spotBtnActive' : ''}`}
-                    role="listitem"
-                  >
-                    {spot.label.replace('عمود', 'ع')}
-                  </button>
-                ))}
-              </div>
+              {spotsForFloor.length > 0 ? (
+                <div className="resSpotSection resSpotSectionSpots">
+                  <div className="label" style={{ marginBottom: 10 }}>
+                    ٢ — العمود ثم الموقف في «{floor}»
+                  </div>
+                  {columnsList.map((col) => {
+                    const colSpots = spotsForFloor.filter((s) => s.columnId === col.id);
+                    if (!colSpots.length) return null;
+                    return (
+                      <div key={col.id} className="resSpotColumnBlock">
+                        <div className="resSpotColumnTitle">{col.name}</div>
+                        <div className="spotsGrid" role="list">
+                          {colSpots.map((spot) => (
+                            <button
+                              key={spot.id}
+                              type="button"
+                              onClick={() => {
+                                setColumn(spot.label);
+                                setAccessibleParking(spot.isAccessibleOnly);
+                              }}
+                              className={`spotBtn ${column === spot.label ? 'spotBtnActive' : ''}`}
+                              role="listitem"
+                            >
+                              {formatSpotGridCaption(spot)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="muted" style={{ marginTop: 14, marginBottom: 0 }}>
+                  لا توجد مواقف مرتبطة بهذا الدور ضمن الإعدادات الحالية.
+                </p>
+              )}
             </div>
           </div>
 

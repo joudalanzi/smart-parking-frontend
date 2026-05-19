@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api/client';
+import PasswordInput from '../components/PasswordInput';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function AdminLoginPage() {
     try {
       const data = await apiFetch('/api/admin/login', {
         method: 'POST',
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
       if (data?.token) {
         localStorage.setItem('adminToken', data.token);
@@ -39,14 +40,43 @@ export default function AdminLoginPage() {
                 دخول لوحة الإدارة
               </h1>
               <p className="subtitle">لوحة إدارة كاملة: المناطق، الخريطة، ذوي الهمم، الحجوزات، البلاغات والمخالفات.</p>
+              {import.meta.env.DEV ? (
+                <p className="muted" style={{ marginTop: 12, fontSize: 13, lineHeight: 1.7 }}>
+                  للتطوير المحلي: البريد الافتراضي للأدمن هو <code dir="ltr">jood@icloid.com</code> وكلمة المرور{' '}
+                  <code dir="ltr">Admin@123</code>
+                  — أو عيّن <code dir="ltr">ADMIN_EMAIL</code> و<code dir="ltr">ADMIN_PASSWORD</code> في ملف{' '}
+                  <code dir="ltr">.env</code> للباك إند وأعد تشغيل السيرفر.
+                </p>
+              ) : null}
               <form onSubmit={submit} style={{ marginTop: 18 }}>
                 <div className="field">
-                  <div className="label">البريد</div>
-                  <input className="input" dir="ltr" style={{ textAlign: 'left' }} type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <label className="label" htmlFor="admin-login-email">
+                    البريد
+                  </label>
+                  <input
+                    id="admin-login-email"
+                    name="email"
+                    className="input"
+                    dir="ltr"
+                    style={{ textAlign: 'left' }}
+                    type="email"
+                    autoComplete="username"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div className="field" style={{ marginTop: 14 }}>
-                  <div className="label">كلمة المرور</div>
-                  <input className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <label className="label" htmlFor="admin-login-password">
+                    كلمة المرور
+                  </label>
+                  <PasswordInput
+                    id="admin-login-password"
+                    name="password"
+                    className="input"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
                 {msg ? (
                   <p className="danger" style={{ marginTop: 12 }}>
