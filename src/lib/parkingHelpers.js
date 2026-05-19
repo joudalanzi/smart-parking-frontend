@@ -17,8 +17,46 @@ export function estimateAmountRiyals(durationMinutes, pricePerHour = 5) {
 }
 
 const ARABIC_NUMS = '٠١٢٣٤٥٦٧٨٩';
-function toArabicNum(n) {
+export function toArabicNum(n) {
   return String(n).replace(/\d/g, (d) => ARABIC_NUMS[parseInt(d, 10)]);
+}
+
+/** نص مختصر وواضح لأزرار الشبكة (الحجز ما زال يعتمد على spot.label الكامل) */
+export function formatSpotGridCaption(spot) {
+  return `موقف ${toArabicNum(spot.number)} · ${spot.columnName}`;
+}
+
+/**
+ * تقسيم المواقع على الأدوار المتاحة بالتساوي (أول أدوار تأخذ أي موقع زائد).
+ * يُستخدم لعرض واجهة «دور ثم موقف» طالما الخادم لا يخزّن ربطًا فعليًا لكل موقف بدور.
+ */
+export function partitionSpotsByFloors(spots, floorsInOrder) {
+  const raw = floorsInOrder || [];
+  let order = raw.filter((f) => f && f.available);
+  if (!order.length) order = raw.filter(Boolean);
+  if (!spots.length) {
+    const m = new Map();
+    order.forEach((f) => m.set(f.name, []));
+    return m;
+  }
+  const list = order.length ? order : [];
+  if (!list.length) return new Map([['_', [...spots]]]);
+  const n = list.length;
+  const sizes = [];
+  const base = Math.floor(spots.length / n);
+  let rem = spots.length % n;
+  for (let i = 0; i < n; i++) {
+    sizes.push(base + (rem > 0 ? 1 : 0));
+    if (rem > 0) rem--;
+  }
+  const map = new Map();
+  let idx = 0;
+  list.forEach((f, i) => {
+    const sz = sizes[i];
+    map.set(f.name, spots.slice(idx, idx + sz));
+    idx += sz;
+  });
+  return map;
 }
 
 export const ACCESSIBLE_SPOTS_PER_FLOOR = 6;

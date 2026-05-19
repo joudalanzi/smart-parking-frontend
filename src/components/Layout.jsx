@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import saffaLogo from '../assets/saffa-logo.png';
+import { apiFetch } from '../api/client';
+import BrandLogo from './BrandLogo';
 
 function navLinkClass({ isActive }) {
   return `navLink ${isActive ? 'navLinkActive' : ''}`.trim();
@@ -13,12 +14,51 @@ function userDropLinkClass({ isActive }) {
 
 export default function Layout() {
   const { isLoggedIn, logout, user, token, refreshMe } = useAuth();
+  const location = useLocation();
+  const isAdminSession = !!localStorage.getItem('adminToken');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
+  const [notifUnread, setNotifUnread] = useState(0);
+  /** أثناء وجودك في صفحة الإشعارات لا نعرض الرقم؛ وبعد تعليم القراءة يُصفَّر من الخادم */
+  const badgeCount = location.pathname === '/notifications' ? 0 : notifUnread;
 
   useEffect(() => {
     if (token) refreshMe();
   }, [token, refreshMe]);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setNotifUnread(0);
+      return undefined;
+    }
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const data = await apiFetch('/api/reports/unread-count');
+        const n = typeof data?.count === 'number' ? data.count : 0;
+        if (!cancelled) setNotifUnread(n);
+      } catch {
+        if (!cancelled) setNotifUnread(0);
+      }
+    };
+    load();
+    const id = setInterval(load, 45000);
+    const onVis = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    const onMarkedRead = () => setNotifUnread(0);
+    window.addEventListener('pnu-reports-read', onMarkedRead);
+    return () => window.removeEventListener('pnu-reports-read', onMarkedRead);
+  }, []);
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -36,18 +76,29 @@ export default function Layout() {
       <header className="topbar">
         <div className="container topbarInner">
           <Link to="/" className="brand" aria-label="صفَّة">
-            <img src={saffaLogo} alt="" className="brandMark" width={40} height={40} decoding="async" />
-            <span className="brandName">صفَّة</span>
+            <BrandLogo />
           </Link>
 
           <nav className="nav">
             <NavLink to="/" className={navLinkClass} end>
               الرئيسية
             </NavLink>
-          {isLoggedIn ? (
+          {isLoggedIn || isAdminSession ? (
             <>
-              <NavLink to="/dashboard" className={navLinkClass}>
-                لوحة التحكم
+              {isAdminSession ? (
+                <NavLink to="/admin/dashboard" className={navLinkClass}>
+                  لوحة الإدارة
+                </NavLink>
+              ) : null}
+              {isLoggedIn ? (
+              <>
+              <NavLink to="/notifications" className={navLinkClass}>
+                الإشعارات
+                {badgeCount > 0 ? (
+                  <span className="navBadge" aria-label={`إشعارات غير مقروءة: ${badgeCount}`}>
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                ) : null}
               </NavLink>
               <NavLink to="/reservation" className={navLinkClass}>
                 احجز
@@ -70,19 +121,33 @@ export default function Layout() {
                 </button>
                 {userMenuOpen ? (
                   <div className="userDropdown" role="menu">
-                    <NavLink to="/dashboard" className={userDropLinkClass} role="menuitem" onClick={() => setUserMenuOpen(false)}>
-                      لوحة التحكم
-                    </NavLink>
                     <NavLink to="/my-bookings" className={userDropLinkClass} role="menuitem" onClick={() => setUserMenuOpen(false)}>
                       حجوزاتي
                     </NavLink>
                     <NavLink to="/my-reports" className={userDropLinkClass} role="menuitem" onClick={() => setUserMenuOpen(false)}>
                       بلاغاتي
                     </NavLink>
+                    <NavLink to="/notifications" className={userDropLinkClass} role="menuitem" onClick={() => setUserMenuOpen(false)}>
+                      الإشعارات
+                      {badgeCount > 0 ? (
+                        <span className="navBadge navBadgeInline" aria-hidden>
+                          {badgeCount > 99 ? '99+' : badgeCount}
+                        </span>
+                      ) : null}
+                    </NavLink>
                   </div>
                 ) : null}
               </div>
-              <button type="button" onClick={logout} className="btn">
+              </>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem('adminToken');
+                  logout();
+                }}
+                className="btn"
+              >
                 خروج
               </button>
             </>

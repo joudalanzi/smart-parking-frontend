@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -27,19 +27,29 @@ export default function HomePage() {
     });
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await apiFetch('/api/map-zones');
-        const list = data?.zones || [];
-        setZones(list);
-        // لا نختار تلقائيًا — لازم المستخدم يختار من الخريطة بنفسه
-        setSelectedId(null);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'تعذر تحميل المناطق');
-      }
-    })();
+  const loadMapZones = useCallback(async () => {
+    try {
+      const data = await apiFetch('/api/map-zones');
+      const list = data?.zones || [];
+      setZones(list);
+      setSelectedId(null);
+      setError('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر تحميل المناطق');
+    }
   }, []);
+
+  useEffect(() => {
+    loadMapZones();
+  }, [loadMapZones]);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === 'visible') loadMapZones();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [loadMapZones]);
 
   const selected = useMemo(() => zones.find((z) => z.id === selectedId), [zones, selectedId]);
 

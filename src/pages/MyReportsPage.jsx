@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../api/client';
+import { reportStatusLabel } from '../lib/reportLabels';
 
 function formatDt(iso) {
   if (!iso) return '—';
@@ -57,7 +58,7 @@ export default function MyReportsPage() {
           ticketId: ticketId.trim() || undefined,
         }),
       });
-      setFormOk('تم إرسال البلاغ بنجاح. سيتواصل معك فريق الأمن عبر بريدك المسجّل إن لزم.');
+      setFormOk('تم إرسال البلاغ بنجاح. تابع الحالة من «الإشعارات» عندما ترد الإدارة.');
       setSubject('');
       setDetails('');
       setTicketId('');
@@ -81,7 +82,10 @@ export default function MyReportsPage() {
       <div className="pageHeader">
         <div>
           <h1>بلاغاتي</h1>
-          <p>ارفع اعتراضًا أو شكوى؛ تصل بلاغاتك إلى لوحة الأمن لمراجعتها والتواصل معك عبر بريدك الإلكتروني.</p>
+          <p>
+            ارفع اعتراضًا أو شكوى؛ تصل بلاغاتك إلى لوحة الإدارة. عند الرد ستصلك التفاصيل في صفحة{' '}
+            <Link to="/notifications">الإشعارات</Link>، مع إمكانية التواصل بالبريد عند الحاجة.
+          </p>
         </div>
       </div>
 
@@ -134,8 +138,13 @@ export default function MyReportsPage() {
           <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
             {reports.map((rep) => (
               <div key={rep.id} className="kpi" style={{ textAlign: 'right' }}>
-                <div className="kpiLabel">
-                  {rep.type} · {formatDt(rep.createdAt)}
+                <div className="kpiLabel" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <span>
+                    {rep.type} · {formatDt(rep.createdAt)}
+                  </span>
+                  <span className="chip" style={{ fontWeight: 800, fontSize: 12 }}>
+                    {reportStatusLabel(rep.status)}
+                  </span>
                 </div>
                 <div className="kpiValue" style={{ marginTop: 6 }}>
                   <strong>{rep.subject}</strong>
@@ -143,6 +152,21 @@ export default function MyReportsPage() {
                 <p className="muted" style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
                   {rep.details}
                 </p>
+                {rep.adminReply ? (
+                  <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="muted" style={{ fontSize: 12, fontWeight: 800, marginBottom: 6 }}>
+                      رد الإدارة {rep.adminReplyAt ? `· ${formatDt(rep.adminReplyAt)}` : ''}
+                    </div>
+                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{rep.adminReply}</p>
+                    <Link to="/notifications" style={{ display: 'inline-block', marginTop: 8, fontWeight: 800, fontSize: 13 }}>
+                      فتح في الإشعارات
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="muted" style={{ margin: '10px 0 0', fontSize: 13 }}>
+                    لم يُرد بعد — تابع من <Link to="/notifications">الإشعارات</Link>.
+                  </p>
+                )}
                 {rep.ticketId ? (
                   <div className="muted" style={{ marginTop: 8, fontSize: 13 }}>
                     التذكرة: <strong style={{ color: 'var(--text)' }}>{rep.ticketId}</strong>

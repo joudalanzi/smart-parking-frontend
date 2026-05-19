@@ -17,8 +17,17 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     const data = await apiFetch('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
     });
+    if (data?.role === 'admin' && data?.token) {
+      localStorage.setItem('adminToken', data.token);
+      localStorage.removeItem('userToken');
+      localStorage.removeItem('userProfile');
+      setToken(null);
+      setUser(null);
+      return data;
+    }
+    localStorage.removeItem('adminToken');
     if (data?.token) {
       localStorage.setItem('userToken', data.token);
       setToken(data.token);
@@ -47,6 +56,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
+    localStorage.removeItem('adminToken');
     localStorage.removeItem('userToken');
     localStorage.removeItem('userProfile');
     setToken(null);

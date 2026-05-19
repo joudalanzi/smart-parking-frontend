@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { validatePassword } from '../lib/authHelpers';
+import PasswordInput from '../components/PasswordInput';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -27,7 +28,12 @@ export default function AuthPage() {
     setLoading(true);
     try {
       if (tab === 'login') {
-        await login(email.trim(), password);
+        const normalizedEmail = email.trim().toLowerCase();
+        const data = await login(normalizedEmail, password);
+        if (data?.role === 'admin') {
+          navigate('/admin/dashboard', { replace: true });
+          return;
+        }
         navigate(from, { replace: true });
         return;
       }
@@ -113,7 +119,13 @@ export default function AuthPage() {
 
         <div className="field">
           <div className="label">كلمة المرور</div>
-          <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <PasswordInput
+            className="input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
+          />
         </div>
 
         {tab === 'signup' ? (
@@ -149,6 +161,14 @@ export default function AuthPage() {
               ) : null}
             </div>
           </div>
+        ) : null}
+
+        {tab === 'login' ? (
+          <p className="muted" style={{ marginTop: 14, fontSize: 13, lineHeight: 1.7 }}>
+            مسؤول النظام؟{' '}
+            <Link to="/admin/login">دخول لوحة الإدارة</Link>
+            {' '}أو استخدم بريد الأدمن في نموذج الدخول وسيتم توجيهك تلقائياً.
+          </p>
         ) : null}
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>

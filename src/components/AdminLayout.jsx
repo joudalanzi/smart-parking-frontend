@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import BrandLogo from './BrandLogo';
 
 function navClass({ isActive }) {
   return `adminNavLink ${isActive ? 'adminNavLinkActive' : ''}`.trim();
@@ -9,23 +10,23 @@ export default function AdminLayout() {
 
   const logout = () => {
     localStorage.removeItem('adminToken');
-    navigate('/admin/login', { replace: true });
+    navigate('/auth', { replace: true });
   };
 
   return (
     <div className="adminShell">
       <aside className="adminAside">
         <div className="adminAsideInner">
-          <div className="adminBrand">صفَّة — لوحة الإدارة</div>
+          <div className="adminBrand">
+            <BrandLogo className="adminBrandLogo" />
+            <span>لوحة الإدارة</span>
+          </div>
           <nav className="adminNav">
             <NavLink to="/admin/dashboard" className={navClass} end>
               نظرة عامة
             </NavLink>
             <NavLink to="/admin/zones" className={navClass}>
-              المناطق والأعمدة والأدوار
-            </NavLink>
-            <NavLink to="/admin/map" className={navClass}>
-              مناطق الخريطة
+              المناطق
             </NavLink>
             <NavLink to="/admin/disability" className={navClass}>
               طلبات ذوي الهمم
@@ -39,13 +40,14 @@ export default function AdminLayout() {
             <NavLink to="/admin/violations" className={navClass}>
               المخالفات
             </NavLink>
-          </nav>
-          <div className="adminAsideFooter">
-            <a href="/" className="btn" style={{ width: '100%', justifyContent: 'center', textDecoration: 'none' }}>
+            <NavLink to="/" className={navClass} end>
               الموقع العام
-            </a>
-            <button type="button" className="btn" style={{ width: '100%', marginTop: 10 }} onClick={logout}>
-              خروج الأدمن
+            </NavLink>
+          </nav>
+          <div className="adminAsideStretch" aria-hidden />
+          <div className="adminAsideFooter">
+            <button type="button" className="btn" style={{ width: '100%' }} onClick={logout}>
+              خروج
             </button>
           </div>
         </div>

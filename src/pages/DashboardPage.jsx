@@ -10,6 +10,7 @@ export default function DashboardPage() {
     { to: '/booking', title: 'حجزي النشط', desc: 'بدء الجلسة، التمديد، أو إنهاء الحجز.', primary: true },
     { to: '/my-bookings', title: 'حجوزاتي', desc: 'عرض كل حجوزاتك السابقة والحالية.', primary: false },
     { to: '/my-reports', title: 'بلاغاتي', desc: 'إرسال شكوى أو اعتراض ومتابعة السجل.', primary: false },
+    { to: '/notifications', title: 'الإشعارات', desc: 'رد الإدارة على بلاغاتك وحالة المعالجة.', primary: false },
     { to: '/payment', title: 'تأكيد الدفع', desc: 'يُفتح عادةً من مسار الحجز؛ للمراجعة بعد اختيار التفاصيل.', primary: false },
   ];
 
@@ -34,30 +35,6 @@ export default function DashboardPage() {
             {c.primary ? <span className="dashCardBadge">أساسي</span> : null}
           </Link>
         ))}
-      </div>
-
-      <div className="card" style={{ marginTop: 20 }}>
-        <div className="cardBody">
-          <h2 className="sectionTitle">لوحة الإدارة (منفصلة عن حساب المستخدم)</h2>
-          <p className="muted" style={{ marginTop: 0, lineHeight: 1.75 }}>
-            إدارة المناطق، الخريطة، طلبات ذوي الهمم، كل الحجوزات، البلاغات والمخالفات — بحساب أدمن خاص.
-          </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
-            <Link to="/admin/login" className="btn">
-              دخول الأدمن
-            </Link>
-            <Link to="/admin/dashboard" className="btn btnPrimary">
-              لوحة الإدارة الكاملة
-            </Link>
-          </div>
-          <p className="muted" style={{ marginTop: 12, fontSize: 13, marginBottom: 0 }}>
-            المستندات التقنية للـ API:{' '}
-            <a href="/docs" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>
-              /docs
-            </a>{' '}
-            على نفس خادم الباكند (المنفذ 4000).
-          </p>
-        </div>
       </div>
     </div>
   );
